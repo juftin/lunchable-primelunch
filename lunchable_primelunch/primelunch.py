@@ -81,7 +81,7 @@ class PrimeLunch(LunchableApp):
         List[LunchableModel]
         """
         array_df = df.copy()
-        array_df = array_df.fillna(np.NaN).replace([np.NaN], [None])
+        array_df = array_df.replace(np.NaN, None)
         model_array = array_df.to_dict(orient="records")
         return [model_type.model_validate(item) for item in model_array]
 
