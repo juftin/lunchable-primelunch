@@ -85,11 +85,31 @@ class PrimeLunch(LunchableApp):
         model_array = array_df.to_dict(orient="records")
         return [model_type.model_validate(item) for item in model_array]
 
+    def _remove_subtotal_row(self, amazon_df: pd.DataFrame) -> pd.DataFrame:
+        """
+        Inspect the last row of the dataframe and delete it if any of its values
+        contain the string "=SUBTOTAL".
+
+        Parameters
+        ----------
+        amazon_df : pd.DataFrame
+            The dataframe to inspect and potentially modify.
+
+        Returns
+        -------
+        pd.DataFrame
+            The potentially modified dataframe.
+        """
+        if (amazon_df.iloc[-1].astype(str).str.contains("=SUBTOTAL").any()):
+            amazon_df = amazon_df[:-1]
+        return amazon_df
+
     def amazon_to_df(self) -> pd.DataFrame:
         """
         Read an Amazon Data File to a DataFrame
 
         This is pretty simple, except duplicate header rows need to be cleaned
+        If the exporter included a "subtotal" row, it is removed
 
         Returns
         -------
@@ -116,13 +136,16 @@ class PrimeLunch(LunchableApp):
         ).all(axis=1)
         duplicate_header_rows = np.where(header_row_eval)[0]
         amazon_df.drop(duplicate_header_rows, axis=0, inplace=True)
+
+        amazon_df = self._remove_subtotal_row(amazon_df)
+
         amazon_df["total"] = (
             amazon_df["total"].astype("string").str.replace(",", "").astype(np.float64)
         )
         amazon_df = amazon_df.astype(dtype=expected_columns, copy=True, errors="raise")
         logger.info("Amazon Data File loaded: %s", self.file_path)
         return amazon_df
-
+    
     @classmethod
     def filter_amazon_transactions(cls, df: pd.DataFrame) -> pd.DataFrame:
         """
