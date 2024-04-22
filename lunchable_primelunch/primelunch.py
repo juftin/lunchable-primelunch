@@ -145,7 +145,7 @@ class PrimeLunch(LunchableApp):
         amazon_df = amazon_df.astype(dtype=expected_columns, copy=True, errors="raise")
         logger.info("Amazon Data File loaded: %s", self.file_path)
         return amazon_df
-    
+
     @classmethod
     def filter_amazon_transactions(cls, df: pd.DataFrame) -> pd.DataFrame:
         """
