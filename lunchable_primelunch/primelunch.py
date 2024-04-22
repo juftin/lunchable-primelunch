@@ -100,7 +100,7 @@ class PrimeLunch(LunchableApp):
         pd.DataFrame
             The potentially modified dataframe.
         """
-        if (amazon_df.iloc[-1].astype(str).str.contains("=SUBTOTAL").any()):
+        if amazon_df.iloc[-1].astype(str).str.contains("=SUBTOTAL").any():
             amazon_df = amazon_df[:-1]
         return amazon_df
 
