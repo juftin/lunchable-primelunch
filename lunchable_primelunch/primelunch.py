@@ -2,12 +2,14 @@
 PrimeLunch Utils
 """
 
+from __future__ import annotations
+
 import datetime
 import html
 import logging
 import os
 import pathlib
-from typing import Any, Dict, Iterable, List, Type
+from typing import Any, Iterable
 
 import numpy as np
 import pandas as pd
@@ -66,8 +68,8 @@ class PrimeLunch(LunchableApp):
 
     @staticmethod
     def df_to_models(
-        df: pd.DataFrame, model_type: Type[LunchableModelType]
-    ) -> List[LunchableModelType]:
+        df: pd.DataFrame, model_type: type[LunchableModelType]
+    ) -> list[LunchableModelType]:
         """
         Convert DataFrame to Transaction Array
 
@@ -290,7 +292,7 @@ class PrimeLunch(LunchableApp):
 
     def cache_transactions(
         self, start_date: datetime.date, end_date: datetime.date
-    ) -> Dict[int, TransactionObject]:
+    ) -> dict[int, TransactionObject]:
         """
         Cache Transactions to Memory
 
@@ -359,7 +361,7 @@ class PrimeLunch(LunchableApp):
 
     def update_transaction(
         self, transaction: TransactionObject, confirm: bool = True
-    ) -> Dict[str, Any] | None:
+    ) -> dict[str, Any] | None:
         """
         Update a Transaction's Notes if they've changed
 
