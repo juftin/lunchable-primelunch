@@ -25,9 +25,7 @@ click==8.1.7
 click-plugins==1.1.1
     # via lunchable
 coverage==7.4.0
-    # via
-    #   coverage
-    #   pytest-cov
+    # via pytest-cov
 h11==0.14.0
     # via httpcore
 httpcore==1.0.2

@@ -218,6 +218,9 @@ class PrimeLunch(LunchableApp):
         )
         exploded_totals = exploded_totals.explode("parsed_total", ignore_index=True)
         exploded_totals["parsed_total"] = exploded_totals["parsed_total"].str.replace(
+            ",", ".", regex=False
+        )
+        exploded_totals["parsed_total"] = exploded_totals["parsed_total"].str.replace(
             "[^0-9.]", "", regex=True
         )
         exploded_totals["parsed_total"] = exploded_totals["parsed_total"].astype(

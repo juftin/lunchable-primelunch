@@ -35,9 +35,7 @@ click-plugins==1.1.1
     #   -c requirements.txt
     #   lunchable
 coverage==7.4.0
-    # via
-    #   coverage
-    #   pytest-cov
+    # via pytest-cov
 h11==0.14.0
     # via
     #   -c requirements.txt
