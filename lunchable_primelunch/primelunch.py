@@ -6,10 +6,12 @@ from __future__ import annotations
 
 import datetime
 import html
+import locale
 import logging
 import os
 import pathlib
-from typing import Any, Iterable
+import re
+from typing import Any, ClassVar, Iterable
 
 import numpy as np
 import pandas as pd
@@ -32,6 +34,12 @@ class PrimeLunch(LunchableApp):
     """
     PrimeLunch: Amazon Notes Updater
     """
+
+    CURRENCY_LOCALES: ClassVar[dict[str, str]] = {
+        "$": "en_US.UTF-8",
+        "€": "de_DE.UTF-8",
+        "£": "en_GB.UTF-8",
+    }
 
     def __init__(
         self,
@@ -106,6 +114,27 @@ class PrimeLunch(LunchableApp):
             amazon_df = amazon_df[:-1]
         return amazon_df
 
+    @classmethod
+    def currency_to_float(cls, currency: str) -> float | None:
+        """
+        Convert a currency string to float, handling different symbols and formats.
+        """
+        currency_str = str(currency)
+        # Detect locale from currency symbol, or use the system default
+        locale_name = cls.CURRENCY_LOCALES.get(currency_str[0], locale.getlocale())
+        locale.setlocale(locale.LC_ALL, locale_name)
+        # Remove all non-numeric characters except for commas and periods
+        currency_str = re.sub(r"[^0-9\s,\.]", "", currency_str)
+        # Remove commas and periods, except for the last one
+        currency_str = re.sub(r"[,\.](?=.*[,\.])", "", currency_str)
+        if currency_str == "":
+            return None
+        try:
+            return locale.atof(currency_str)
+        except ValueError as e:
+            msg = f"Invalid Currency Conversion: {currency!s}"
+            raise ValueError(msg) from e
+
     def amazon_to_df(self) -> pd.DataFrame:
         """
         Read an Amazon Data File to a DataFrame
@@ -140,10 +169,8 @@ class PrimeLunch(LunchableApp):
         amazon_df.drop(duplicate_header_rows, axis=0, inplace=True)
 
         amazon_df = self._remove_subtotal_row(amazon_df)
-
-        amazon_df["total"] = (
-            amazon_df["total"].astype("string").str.replace(",", "").astype(np.float64)
-        )
+        amazon_df["total"] = amazon_df["total"].apply(self.currency_to_float)
+        amazon_df["shipping"] = amazon_df["shipping"].apply(self.currency_to_float)
         amazon_df = amazon_df.astype(dtype=expected_columns, copy=True, errors="raise")
         logger.info("Amazon Data File loaded: %s", self.file_path)
         return amazon_df
@@ -217,14 +244,8 @@ class PrimeLunch(LunchableApp):
             currency_matcher
         )
         exploded_totals = exploded_totals.explode("parsed_total", ignore_index=True)
-        exploded_totals["parsed_total"] = exploded_totals["parsed_total"].str.replace(
-            ",", ".", regex=False
-        )
-        exploded_totals["parsed_total"] = exploded_totals["parsed_total"].str.replace(
-            "[^0-9.]", "", regex=True
-        )
-        exploded_totals["parsed_total"] = exploded_totals["parsed_total"].astype(
-            np.float64
+        exploded_totals["parsed_total"] = exploded_totals["parsed_total"].apply(
+            cls.currency_to_float
         )
         exploded_totals = exploded_totals[~exploded_totals["parsed_total"].isnull()]
         exploded_totals["total"] = np.where(
