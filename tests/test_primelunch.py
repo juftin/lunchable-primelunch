@@ -2,6 +2,8 @@
 Test Primelunch
 """
 
+from __future__ import annotations
+
 import locale
 from typing import TypedDict
 
