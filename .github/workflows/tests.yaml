@@ -42,6 +42,15 @@ jobs:
               uses: actions/setup-python@v5
               with:
                   python-version: ${{ matrix.python }}
+            - name: Install Locales
+              run: |
+                  sudo apt-get update
+                  sudo apt-get install -y locales
+                  sudo locale-gen en_US.UTF-8
+                  sudo locale-gen de_DE.UTF-8
+                  sudo locale-gen en_GB.UTF-8
+                  sudo locale-gen ru_RU.UTF-8
+                  sudo update-locale
             - name: Install Hatch
               run: |
                   python -m pip install -q --upgrade pip wheel
