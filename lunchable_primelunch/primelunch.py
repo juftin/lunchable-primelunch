@@ -312,7 +312,7 @@ class PrimeLunch(LunchableApp):
         merged_data["notes"] = merged_data["items"]
         deduplicated = cls.deduplicate_matched(df=merged_data)
         logger.info("%s Matching Amazon Transactions Identified", len(deduplicated))
-        return deduplicated[TransactionObject.__fields__.keys()]
+        return deduplicated[TransactionObject.__fields__.keys()]  # type: ignore[attr-defined]
 
     def cache_transactions(
         self, start_date: datetime.date, end_date: datetime.date
@@ -377,7 +377,7 @@ class PrimeLunch(LunchableApp):
             transaction_table.add_row("📝 Notes", former_transaction.notes)
         notes_table.add_row(
             "🗒  Amazon Notes",
-            transaction.notes.strip(),
+            transaction.notes.strip(),  # type: ignore[union-attr]
         )
         print()
         print(transaction_table)
@@ -400,7 +400,7 @@ class PrimeLunch(LunchableApp):
         """
         former_transaction = self.data.transactions[transaction.id]
         response = None
-        stripped_notes = transaction.notes.strip()
+        stripped_notes = transaction.notes.strip()  # type: ignore[union-attr]
         acceptable_length = min(349, len(stripped_notes))
         new_notes = stripped_notes[:acceptable_length]
         if former_transaction.notes != new_notes:
@@ -415,7 +415,7 @@ class PrimeLunch(LunchableApp):
             if confirmation is True:
                 response = self.lunch.update_transaction(
                     transaction_id=transaction.id,
-                    transaction=TransactionUpdateObject(notes=new_notes),
+                    transaction=TransactionUpdateObject(notes=new_notes),  # type: ignore[call-arg]
                 )
                 if confirm is True:
                     print(f"\t✅ Transaction #{transaction.id} updated")

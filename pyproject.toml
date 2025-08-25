@@ -10,11 +10,11 @@ classifiers = [
   "Development Status :: 5 - Production/Stable",
   "Operating System :: OS Independent",
   "Programming Language :: Python",
-  "Programming Language :: Python :: 3.8",
   "Programming Language :: Python :: 3.9",
   "Programming Language :: Python :: 3.10",
   "Programming Language :: Python :: 3.11",
   "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
   "Programming Language :: Python :: Implementation :: CPython",
   "Programming Language :: Python :: Implementation :: PyPy"
 ]
@@ -25,11 +25,11 @@ dependencies = [
   "rich"
 ]
 description = "LunchMoney Amazon Transaction Updater"
-dynamic = ["version"]
 license = "MIT"
 name = "lunchable-primelunch"
 readme = "README.md"
-requires-python = ">=3.8"
+requires-python = ">=3.9,<4"
+version = "1.0.6"
 
 [project.entry-points."lunchable.cli"]
 primelunch = "lunchable_primelunch.cli:primelunch"
@@ -41,6 +41,38 @@ primelunch = "lunchable_primelunch.cli:primelunch"
 Documentation = "https://juftin.github.io/lunchable-primelunch"
 Issues = "https://github.com/juftin/lunchable-primelunch/issues"
 Source = "https://github.com/juftin/lunchable-primelunch"
+
+[dependency-groups]
+dev = [
+  "pytest",
+  "pytest-cov",
+  "vcrpy",
+  "pytest-asyncio",
+  "mypy>=1.6.1",
+  "ruff~=0.1.7"
+]
+docs = [
+  "markdown-callouts",
+  "markdown-exec",
+  "mkdocs",
+  "mkdocs-autorefs",
+  "mkdocs-gen-files",
+  "mkdocs-literate-nav",
+  "mkdocs-material",
+  "mkdocs-section-index",
+  "mkdocstrings",
+  "mkdocstrings-python",
+  "pymdown-extensions"
+]
+
+[tool.pytest.ini_options]
+addopts = [
+  "-v",
+  "--cov=lunchable_primelunch",
+  "--cov-report=term-missing",
+  "--cov-report=xml:coverage.xml",
+  "--junitxml=pytest.xml"
+]
 
 [tool.coverage.paths]
 lunchable_primelunch = ["lunchable_primelunch", "*/lunchable-primelunch/lunchable_primelunch"]
@@ -61,95 +93,6 @@ omit = [
 ]
 parallel = true
 source_pkgs = ["lunchable_primelunch", "tests"]
-
-[tool.cruft]
-skip = [
-  "lunchable_primelunch/__about__.py",
-  "lunchable_primelunch/__init__.py",
-  "tests/"
-]
-
-[tool.hatch.env]
-requires = ["hatch-pip-compile", "hatch-mkdocs"]
-
-[tool.hatch.env.collectors.mkdocs.docs]
-path = "mkdocs.yaml"
-
-[tool.hatch.envs.all]
-pip-compile-constraint = ""
-template = "test"
-
-[[tool.hatch.envs.all.matrix]]
-python = ["3.8", "3.9", "3.10", "3.11", "3.12", "3.13"]
-
-[tool.hatch.envs.default]
-pip-compile-constraint = "default"
-post-install-commands = [
-  "- pre-commit install"
-]
-type = "pip-compile"
-
-[tool.hatch.envs.default.scripts]
-cov = "hatch run test:cov"
-test = "hatch run test:test"
-
-[tool.hatch.envs.docs]
-detached = false
-pip-compile-constraint = "default"
-template = "docs"
-type = "pip-compile"
-
-[tool.hatch.envs.gen]
-detached = true
-
-[tool.hatch.envs.gen.scripts]
-release = [
-  "npm install --prefix .github/semantic_release/",
-  "npx --prefix .github/semantic_release/ semantic-release {args:}"
-]
-
-[tool.hatch.envs.lint]
-dependencies = [
-  "mypy>=1.6.1",
-  "ruff~=0.1.7"
-]
-detached = true
-type = "pip-compile"
-
-[tool.hatch.envs.lint.scripts]
-all = [
-  "style",
-  "typing"
-]
-fmt = [
-  "ruff format {args:.}",
-  "ruff --fix {args:.}",
-  "style"
-]
-precommit = [
-  "pre-commit run --all-files"
-]
-style = [
-  "ruff {args:.}",
-  "ruff format --check --diff {args:.}"
-]
-typing = "mypy --install-types --non-interactive {args:lunchable_primelunch tests}"
-
-[tool.hatch.envs.test]
-dependencies = [
-  "pytest",
-  "pytest-cov"
-]
-
-[tool.hatch.envs.test.scripts]
-cov = "pytest --cov --cov-config=pyproject.toml {args:tests}"
-test = "pytest {args:tests}"
-
-[tool.hatch.metadata]
-allow-direct-references = true
-
-[tool.hatch.version]
-path = "lunchable_primelunch/__about__.py"
 
 [tool.mypy]
 check_untyped_defs = true
@@ -195,7 +138,6 @@ select = [
   "FBT",  # flake8-boolean-trap
   "I",  # isort
   "ICN",  # flake8-import-conventions
-  "ISC",  # flake8-implicit-str-concat
   "N",  # pep8-naming
   "PLC",  # Pylint (Convention message)
   "PLE",  # Pylint (Error message)
