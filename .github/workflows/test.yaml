@@ -24,11 +24,16 @@ jobs:
             fail-fast: true
             matrix:
                 include:
-                    - { name: Python 3.13, python: "3.13" }
-                    - { name: Python 3.12, python: "3.12" }
-                    - { name: Python 3.11, python: "3.11" }
-                    - { name: Python 3.10, python: "3.10" }
-                    - { name: Python 3.9, python: "3.9" }
+                    - { name: Python 3.13, python: "3.13", task: test }
+                    - { name: Python 3.12, python: "3.12", task: test }
+                    - {
+                          name: Python 3.12 (pandas 3),
+                          python: "3.12",
+                          task: test:pandas-3,
+                      }
+                    - { name: Python 3.11, python: "3.11", task: test }
+                    - { name: Python 3.10, python: "3.10", task: test }
+                    - { name: Python 3.9, python: "3.9", task: test }
         permissions:
             contents: read
             id-token: write
@@ -48,10 +53,10 @@ jobs:
               with:
                   checkout: true
                   setup-uv: true
-                  task: test
+                  task: ${{ matrix.task }}
                   install: true
                   github-token: ${{ secrets.GITHUB_TOKEN }}
-                  annotations-pytest: ${{ matrix.python == '3.12' && true || false }}
-                  pytest-coverage: ${{ matrix.python == '3.12' && github.event_name == 'pull_request' && true || false }}
+                  annotations-pytest: ${{ matrix.python == '3.12' && matrix.task == 'test' && true || false }}
+                  pytest-coverage: ${{ matrix.python == '3.12' && matrix.task == 'test' && github.event_name == 'pull_request' && true || false }}
               env:
                   UV_PYTHON: ${{ matrix.python }}
