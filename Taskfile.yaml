@@ -35,6 +35,20 @@ tasks:
             GITHUB_TOKEN: placeholder
             UV_PYTHON: "{{.UV_PYTHON}}"
     #######################################
+    test:pandas-3:
+        desc: Run Tests Against pandas 3.x (overrides the locked pandas 2.x pin without touching uv.lock, to catch pandas-3-only regressions)
+        cmds:
+            - uv pip install --python .venv --upgrade "pandas>=3,<4"
+            - uv run --no-sync -- pytest {{.CLI_ARGS}}
+        deps:
+            - task: sync
+              vars:
+                  UV_PYTHON: "{{.UV_PYTHON}}"
+                  CLI_ARGS: --quiet
+        env:
+            GITHUB_TOKEN: placeholder
+            UV_PYTHON: "{{.UV_PYTHON}}"
+    #######################################
     test:matrix:
         desc: Run Tests with different Python versions
         cmds:
