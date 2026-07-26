@@ -171,6 +171,8 @@ class PrimeLunch(LunchableApp):
         amazon_df = self._remove_subtotal_row(amazon_df)
         amazon_df["total"] = amazon_df["total"].apply(self.currency_to_float)
         amazon_df["shipping"] = amazon_df["shipping"].apply(self.currency_to_float)
+        amazon_df["gift"] = amazon_df["gift"].apply(self.currency_to_float)
+        amazon_df["refund"] = amazon_df["refund"].apply(self.currency_to_float)
         amazon_df = amazon_df.astype(dtype=expected_columns, copy=True, errors="raise")
         logger.info("Amazon Data File loaded: %s", self.file_path)
         return amazon_df
