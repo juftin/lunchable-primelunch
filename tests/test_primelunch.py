@@ -40,14 +40,14 @@ def test_currency_str(conversion: CurrencyConversion) -> None:
     assert PrimeLunch.currency_to_float(conversion["currency"]) == conversion["amount"]
 
 
-def _primelunch(on_conflict: NoteConflict) -> PrimeLunch:
+def _primelunch(on_notes_conflict: NoteConflict) -> PrimeLunch:
     return PrimeLunch(
-        file_path="unused.csv", access_token="test", on_conflict=on_conflict
+        file_path="unused.csv", access_token="test", on_notes_conflict=on_notes_conflict
     )
 
 
 @pytest.mark.parametrize(
-    ("on_conflict", "expected"),
+    ("on_notes_conflict", "expected"),
     [
         (NoteConflict.APPEND, "Filament for gridfinity SUNLU PLA;"),
         (NoteConflict.PREPEND, "SUNLU PLA; Filament for gridfinity"),
@@ -56,24 +56,24 @@ def _primelunch(on_conflict: NoteConflict) -> PrimeLunch:
     ],
 )
 def test_resolve_notes_conflict(
-    on_conflict: NoteConflict, expected: str, caplog: pytest.LogCaptureFixture
+    on_notes_conflict: NoteConflict, expected: str, caplog: pytest.LogCaptureFixture
 ) -> None:
     """
-    Existing notes that differ from Amazon's are settled by on_conflict and logged.
+    Notes that differ from Amazon's are settled by on_notes_conflict and logged.
     """
     with caplog.at_level(logging.INFO):
-        result = _primelunch(on_conflict).resolve_notes(
+        result = _primelunch(on_notes_conflict).resolve_notes(
             transaction_id=7, current="Filament for gridfinity", proposed="SUNLU PLA;"
         )
 
     assert result == expected
     assert (
-        f"Notes conflict on transaction #7 ({on_conflict.value}): "
+        f"Notes conflict on transaction #7 ({on_notes_conflict.value}): "
         f"current='Filament for gridfinity' proposed='SUNLU PLA;' result={expected!r}"
     ) in caplog.text
 
 
-@pytest.mark.parametrize("on_conflict", list(NoteConflict))
+@pytest.mark.parametrize("on_notes_conflict", list(NoteConflict))
 @pytest.mark.parametrize(
     ("current", "expected"),
     [
@@ -84,7 +84,7 @@ def test_resolve_notes_conflict(
     ],
 )
 def test_resolve_notes_no_conflict(
-    on_conflict: NoteConflict,
+    on_notes_conflict: NoteConflict,
     current: str | None,
     expected: str,
     caplog: pytest.LogCaptureFixture,
@@ -93,7 +93,7 @@ def test_resolve_notes_no_conflict(
     Blank notes take Amazon's text; notes already containing it are kept.
     """
     with caplog.at_level(logging.INFO):
-        result = _primelunch(on_conflict).resolve_notes(
+        result = _primelunch(on_notes_conflict).resolve_notes(
             transaction_id=7, current=current, proposed="SUNLU PLA;"
         )
 

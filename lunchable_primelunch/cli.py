@@ -30,8 +30,8 @@ import click
     default=False,
 )
 @click.option(
-    "--on-conflict",
-    "on_conflict",
+    "--on-notes-conflict",
+    "on_notes_conflict",
     type=click.Choice(["append", "prepend", "replace", "skip"]),
     help="What to do when a transaction already has notes that don't contain "
     "the Amazon items",
@@ -50,7 +50,11 @@ import click
     envvar="LUNCHMONEY_ACCESS_TOKEN",
 )
 def primelunch(
-    csv_file: str, window: int, update_all: bool, on_conflict: str, access_token: str
+    csv_file: str,
+    window: int,
+    update_all: bool,
+    on_notes_conflict: str,
+    access_token: str,
 ) -> None:
     """
     Update your Amazon LunchMoney transactions
@@ -61,7 +65,7 @@ def primelunch(
         file_path=csv_file,
         time_window=window,
         access_token=access_token,
-        on_conflict=NoteConflict(on_conflict),
+        on_notes_conflict=NoteConflict(on_notes_conflict),
     )
     primelunch.process_transactions(confirm=not update_all)
 

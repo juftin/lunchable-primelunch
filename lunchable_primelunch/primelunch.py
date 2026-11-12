@@ -61,7 +61,7 @@ class PrimeLunch(LunchableApp):
         file_path: str | os.PathLike[str] | pathlib.Path,
         time_window: int = 7,
         access_token: str | None = None,
-        on_conflict: NoteConflict = NoteConflict.SKIP,
+        on_notes_conflict: NoteConflict = NoteConflict.SKIP,
     ) -> None:
         """
         Initialize and set internal data
@@ -69,7 +69,7 @@ class PrimeLunch(LunchableApp):
         super().__init__(access_token=access_token)
         self.file_path = pathlib.Path(file_path)
         self.time_window = time_window
-        self.on_conflict = on_conflict
+        self.on_notes_conflict = on_notes_conflict
 
     @staticmethod
     def models_to_df(models: Iterable[LunchableModel]) -> pd.DataFrame:
@@ -408,7 +408,7 @@ class PrimeLunch(LunchableApp):
 
         Notes that already contain Amazon's text are left alone. Any other
         existing notes (e.g. a hand-written "Filament for gridfinity") are a
-        conflict, settled by `on_conflict` and logged.
+        conflict, settled by `on_notes_conflict` and logged.
         """
         proposed = proposed[:MAX_NOTES_LENGTH]
         if not current:
@@ -422,11 +422,11 @@ class PrimeLunch(LunchableApp):
             NoteConflict.PREPEND: f"{proposed} {current}",
             NoteConflict.REPLACE: proposed,
             NoteConflict.SKIP: current,
-        }[self.on_conflict][:MAX_NOTES_LENGTH]
+        }[self.on_notes_conflict][:MAX_NOTES_LENGTH]
         logger.info(
             "Notes conflict on transaction #%s (%s): current=%r proposed=%r result=%r",
             transaction_id,
-            self.on_conflict.value,
+            self.on_notes_conflict.value,
             current,
             proposed,
             resolved,
