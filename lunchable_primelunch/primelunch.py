@@ -5,6 +5,7 @@ PrimeLunch Utils
 from __future__ import annotations
 
 import datetime
+import enum
 import html
 import locale
 import logging
@@ -29,6 +30,20 @@ from rich.prompt import Confirm
 
 logger = logging.getLogger(__name__)
 
+# LunchMoney rejects notes longer than this
+MAX_NOTES_LENGTH = 349
+
+
+class NoteConflict(str, enum.Enum):
+    """
+    What to do when a transaction already has notes that differ from Amazon's
+    """
+
+    APPEND = "append"
+    PREPEND = "prepend"
+    REPLACE = "replace"
+    SKIP = "skip"
+
 
 class PrimeLunch(LunchableApp):
     """
@@ -46,6 +61,7 @@ class PrimeLunch(LunchableApp):
         file_path: str | os.PathLike[str] | pathlib.Path,
         time_window: int = 7,
         access_token: str | None = None,
+        on_conflict: NoteConflict = NoteConflict.SKIP,
     ) -> None:
         """
         Initialize and set internal data
@@ -53,6 +69,7 @@ class PrimeLunch(LunchableApp):
         super().__init__(access_token=access_token)
         self.file_path = pathlib.Path(file_path)
         self.time_window = time_window
+        self.on_conflict = on_conflict
 
     @staticmethod
     def models_to_df(models: Iterable[LunchableModel]) -> pd.DataFrame:
@@ -383,6 +400,39 @@ class PrimeLunch(LunchableApp):
         print(transaction_table)
         print(notes_table)
 
+    def resolve_notes(
+        self, transaction_id: int, current: str | None, proposed: str
+    ) -> str | None:
+        """
+        Decide a transaction's notes given its current notes and Amazon's
+
+        Notes that already contain Amazon's text are left alone. Any other
+        existing notes (e.g. a hand-written "Filament for gridfinity") are a
+        conflict, settled by `on_conflict` and logged.
+        """
+        proposed = proposed[:MAX_NOTES_LENGTH]
+        if not current:
+            return proposed
+
+        if proposed in current:
+            return current
+
+        resolved = {
+            NoteConflict.APPEND: f"{current} {proposed}",
+            NoteConflict.PREPEND: f"{proposed} {current}",
+            NoteConflict.REPLACE: proposed,
+            NoteConflict.SKIP: current,
+        }[self.on_conflict][:MAX_NOTES_LENGTH]
+        logger.info(
+            "Notes conflict on transaction #%s (%s): current=%r proposed=%r result=%r",
+            transaction_id,
+            self.on_conflict.value,
+            current,
+            proposed,
+            resolved,
+        )
+        return resolved
+
     def update_transaction(
         self, transaction: TransactionObject, confirm: bool = True
     ) -> dict[str, Any] | None:
@@ -400,9 +450,11 @@ class PrimeLunch(LunchableApp):
         """
         former_transaction = self.data.transactions[transaction.id]
         response = None
-        stripped_notes = transaction.notes.strip()  # type: ignore[union-attr]
-        acceptable_length = min(349, len(stripped_notes))
-        new_notes = stripped_notes[:acceptable_length]
+        new_notes = self.resolve_notes(
+            transaction_id=transaction.id,
+            current=former_transaction.notes,
+            proposed=transaction.notes.strip(),  # type: ignore[union-attr]
+        )
         if former_transaction.notes != new_notes:
             confirmation = True
             if confirm is True:
